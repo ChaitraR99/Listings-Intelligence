@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vanilla Steel · Listing Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<aside id="side">
+  <svg class="logo" viewBox="0 0 1069.3 200" xmlns="http://www.w3.org/2000/svg" aria-label="Vanilla Steel"><g fill="currentColor"><path d="M168.3,42.8L98.8,2.6C95.8,0.9,92.4,0,89,0c-3.4,0-6.8,0.9-9.8,2.6L9.7,42.8c-6,3.5-9.7,10-9.7,16.9v80.5c0,6.9,3.7,13.4,9.7,16.9l69.5,40.2c3,1.7,6.4,2.6,9.8,2.6c3.4,0,6.8-0.9,9.8-2.6l69.5-40.2c6-3.5,9.7-10,9.7-16.9V59.7C178.1,52.8,174.4,46.3,168.3,42.8z M56.3,30.3c0.4-1.4,2.1-2.9,5.2-4.7l23.3-13.5c1.3-0.8,2.8-1.1,4.3-1.1c1.5,0,3,0.4,4.3,1.1l64.3,37.2c3.1,1.8,4.8,3.3,5.2,4.7c0.4,1.6-0.4,4.3-2.4,7.8l0,0l-38.6,66.8c-1.2,2.1-3.3,3.4-5.6,3.4c-2.1,0-3.9-1.2-5-3.2l-53-91.7C56.6,34.1,55.9,31.8,56.3,30.3z M15.2,147.6c-2.6-1.5-4.3-4.4-4.3-7.4V72.6l63.1,109.1L15.2,147.6z M91.4,181.4c-1.1,1.8-3.7,1.8-4.8,0L17.5,62c-2-3.5-2.9-6.2-2.4-7.8c0.4-1.4,2.1-2.9,5.2-4.7l24.3-14.1l57.1,98.8c2.6,4.7,6.9,7.9,12,8.7L91.4,181.4z M167.1,140.3c0,3-1.6,5.9-4.3,7.4l-59,34.1l63.2-109.6V140.3z"/><path d="M790.4,99.6c-5.2-2.4-11.2-4.4-17.8-5.8l-8.4-2.1c-5-1.2-9.3-2.6-12.8-4.1c-3.6-1.6-6.3-3.6-8.3-6.1c-1.9-2.5-2.9-5.7-2.9-9.7c0-6.1,2.3-10.7,6.8-14c4.5-3.3,10.5-5,18-5c5.2,0,9.8,0.8,13.9,2.4c4.1,1.6,7.2,4.1,9.6,7.5c2.3,3.4,3.5,7.8,3.5,13.3v1.5h13.5V76c0-7.8-1.8-14.3-5.3-19.4c-3.5-5.1-8.3-9-14.4-11.7c-6.1-2.7-13-4-20.7-4c-7.6,0-14.3,1.2-20,3.7c-5.8,2.5-10.3,6.1-13.5,10.7c-3.2,4.7-4.8,10.2-4.8,16.6c0,6.4,1.4,11.6,4.3,15.7c2.9,4.1,6.8,7.3,11.9,9.8c5.1,2.5,10.9,4.6,17.5,6.3l8.4,2.1c5.1,1.2,9.5,2.6,13.3,4.1c3.8,1.6,6.7,3.6,8.8,6.1c2.1,2.5,3.2,5.8,3.2,10.1c0,6.1-2.3,11.1-7,15.1c-4.7,4-11.4,6-20.3,6c-8.7,0-15.7-2.3-21.3-6.9c-5.5-4.6-8.3-11.6-8.3-21v-3.4H724v3.4c0,8.9,1.9,16.3,5.6,22.2c3.7,5.9,8.8,10.3,15.3,13.2c6.5,2.9,13.8,4.4,22.1,4.4c8.2,0,15.4-1.4,21.5-4.1c6.1-2.8,10.8-6.6,14.2-11.6c3.4-5,5-10.8,5-17.5c0-6.7-1.6-12.1-4.7-16.3C799.9,105.3,795.7,102,790.4,99.6z"/><path d="M310.2,43.2L280,145.9c-0.5,1.8-3.1,1.8-3.6,0L246.1,43.2H232l34.2,113.6h23.9l34.2-113.6H310.2z"/><path d="M391.6,141.1v-35.9c0-9.5-2.8-16.9-8.4-22.2c-5.6-5.2-13.5-7.9-23.7-7.9c-6.6,0-12.3,1.1-17,3.3c-4.7,2.2-8.5,5.1-11.3,8.8c-2.8,3.6-4.9,7.7-6.2,12.1l12,3.9c1.3-5.2,3.7-9.3,7.3-12.4c3.6-3.1,8.5-4.6,14.9-4.6c6.5,0,11.4,1.6,14.7,4.9c3.3,3.2,5,7.7,5,13.3v5.8h-26.8c-5.6,0-10.7,0.9-15.3,2.7c-4.5,1.8-8.1,4.4-10.7,8c-2.6,3.5-3.9,8-3.9,13.4c0,5.3,1.3,9.8,3.9,13.5c2.6,3.7,6.2,6.5,10.7,8.4c4.5,1.9,9.6,2.9,15.1,2.9c5.5,0,10-0.7,13.5-2.2c3.5-1.5,6.2-3.3,8.2-5.5c2-2.2,3.6-4.4,4.8-6.4h1.9v0.8c0,3.4,1.1,6,3.2,8c2.2,2,5,3,8.6,3h11.2v-10.9h-7.3C393.1,145.9,391.6,144.3,391.6,141.1z M379,122.4c0,8.1-2.4,14.4-7.1,18.9c-4.7,4.5-10.8,6.7-18.4,6.7c-5.4,0-9.8-1.2-13.2-3.7c-3.4-2.5-5.1-5.9-5.1-10.4c0-4.4,1.6-7.8,5-10c3.3-2.2,7.5-3.3,12.6-3.3H379V122.4z"/><path d="M471.3,79.7c-4.7-2.5-10-3.7-16-3.7c-8.1,0-14.3,1.5-18.4,4.6c-4.2,3.1-7.1,6.5-8.8,10.3h-2.3V77.4h-12.5v79.4h12.8v-39.9c0-9.8,2.4-17.3,7.2-22.2c4.8-5,11.1-7.5,18.7-7.5c6.7,0,12,1.8,16,5.4c3.9,3.6,5.9,9.3,5.9,17.2v47.1h12.8v-48c0-7.1-1.4-13.1-4.2-18C479.8,85.9,476.1,82.2,471.3,79.7z"/><rect x="506.3" y="77.4" width="12.8" height="79.4"/><path d="M512.8,45.5c-2.8,0-5.2,0.9-7.1,2.8c-1.9,1.8-2.8,4.2-2.8,7.1c0,2.8,0.9,5.1,2.8,7c1.9,1.8,4.2,2.8,7.1,2.8c2.8,0,5.1-0.9,7-2.8c1.8-1.8,2.8-4.2,2.8-7c0-2.9-0.9-5.3-2.8-7.1C517.9,46.4,515.6,45.5,512.8,45.5z"/><rect x="539.6" y="43.2" width="12.8" height="113.6"/><rect x="571.2" y="43.2" width="12.8" height="113.6"/><path d="M668.5,141.1v-35.9c0-9.5-2.8-16.9-8.4-22.2c-5.6-5.2-13.5-7.9-23.7-7.9c-6.6,0-12.3,1.1-17,3.3c-4.7,2.2-8.5,5.1-11.3,8.8c-2.8,3.6-4.9,7.7-6.2,12.1l12,3.9c1.3-5.2,3.7-9.3,7.3-12.4c3.6-3.1,8.5-4.6,14.9-4.6c6.5,0,11.4,1.6,14.7,4.9c3.3,3.2,5,7.7,5,13.3v5.8H629c-5.6,0-10.7,0.9-15.3,2.7c-4.5,1.8-8.1,4.4-10.7,8c-2.6,3.5-3.9,8-3.9,13.4c0,5.3,1.3,9.8,3.9,13.5c2.6,3.7,6.2,6.5,10.7,8.4c4.5,1.9,9.6,2.9,15.1,2.9c5.5,0,10-0.7,13.5-2.2c3.5-1.5,6.2-3.3,8.2-5.5c2-2.2,3.6-4.4,4.8-6.4h1.9v0.8c0,3.4,1.1,6,3.2,8c2.2,2,5,3,8.6,3h11.2v-10.9H673C670,145.9,668.5,144.3,668.5,141.1z M655.8,122.4c0,8.1-2.4,14.4-7.1,18.9c-4.7,4.5-10.8,6.7-18.4,6.7c-5.4,0-9.8-1.2-13.2-3.7c-3.4-2.5-5.1-5.9-5.1-10.4c0-4.4,1.6-7.8,5-10c3.3-2.2,7.5-3.3,12.6-3.3h26.3V122.4z"/><path d="M844.9,49.2h-12.8v28.2h-16.9v11.2h16.9v54.2c0,4.3,1.2,7.7,3.7,10.2c2.4,2.5,5.9,3.7,10.5,3.7h21.1v-11h-17.7c-3.1,0-4.7-1.6-4.7-4.9V88.6h23V77.4h-23V49.2z"/><path d="M934.3,80c-5.7-3.2-12.3-4.8-19.8-4.8c-7.7,0-14.5,1.7-20.4,5.1c-6,3.4-10.6,8.2-14,14.4c-3.4,6.2-5,13.4-5,21.6v1.9c0,8.1,1.7,15.3,5,21.4c3.4,6.2,8.1,11,14.1,14.4c6.1,3.4,13.1,5.1,21.1,5.1c7.1,0,13-1.1,17.6-3.4c4.6-2.3,8.3-5.1,11.2-8.4c2.9-3.4,5.1-6.7,6.7-10.1l-11-5.4c-1.9,4.3-4.8,8.1-8.4,11.2c-3.7,3.1-8.9,4.7-15.7,4.7c-7.8,0-14.3-2.4-19.5-7.2c-5.2-4.8-8-11.5-8.3-20h64.8v-5.8c0-8-1.6-15-4.9-20.9C944.5,87.7,940,83.1,934.3,80z M888,109.9c1.1-7.4,3.9-13.1,8.6-17.2c4.7-4.1,10.6-6.2,17.9-6.2c7.1,0,13,2.1,17.6,6.2c4.6,4.1,7.1,9.8,7.5,17.2H888z"/><path d="M1023.8,80c-5.7-3.2-12.3-4.8-19.8-4.8c-7.7,0-14.5,1.7-20.4,5.1c-6,3.4-10.6,8.2-14,14.4c-3.4,6.2-5,13.4-5,21.6v1.9c0,8.1,1.7,15.3,5,21.4c3.4,6.2,8.1,11,14.1,14.4c6.1,3.4,13.1,5.1,21.1,5.1c7.1,0,13-1.1,17.6-3.4c4.6-2.3,8.3-5.1,11.2-8.4c2.9-3.4,5.1-6.7,6.7-10.1l-11-5.4c-1.9,4.3-4.8,8.1-8.4,11.2c-3.7,3.1-8.9,4.7-15.7,4.7c-7.8,0-14.3-2.4-19.5-7.2c-5.2-4.8-8-11.5-8.3-20h64.8v-5.8c0-8-1.6-15-4.9-20.9C1034.1,87.7,1029.6,83.1,1023.8,80z M977.6,109.9c1.1-7.4,3.9-13.1,8.6-17.2c4.7-4.1,10.6-6.2,17.9-6.2c7.1,0,13,2.1,17.6,6.2c4.6,4.1,7.1,9.8,7.5,17.2H977.6z"/><rect x="1056.5" y="43.2" width="12.8" height="113.6"/></g></svg>
+  <nav id="nav"></nav>
+  <div class="foot">
+    <span class="tag">Listing Intelligence · Phase 1 prototype</span>
+    <label class="switch"><input type="checkbox" id="themeToggle"> Dark mode</label>
+    <span id="aiStatus" class="tiny">AI: checking…</span>
+  </div>
+</aside>
+<div id="main">
+  <div id="topbar"><span class="logo" id="topLogo"></span><select id="navMobile"></select></div>
+
+  <!-- DASHBOARD -->
+  <section class="page" id="p-dashboard">
+    <div class="page-head"><div><div class="eyebrow">Operations · Listings</div><h1>Dashboard</h1><p>Processed supplier listings, pending reviews and extraction quality. Everything here is computed from listings stored in this browser.</p></div><div class="row"><button class="btn primary" data-go="new">+ New listing</button></div></div>
+    <div class="kpis" id="dashKpis"></div>
+    <div class="grid2">
+      <div class="card"><h2>Recent listings</h2><div id="dashRecent" class="list"></div></div>
+      <div class="card"><h2>Supplier extraction quality</h2><div id="dashSuppliers"></div></div>
+    </div>
+  </section>
+
+  <!-- NEW LISTING -->
+  <section class="page" id="p-new">
+    <div class="page-head"><div><div class="eyebrow">Step 1–2</div><h1>New listing</h1><p>Upload raw supplier files. The app reads real XLSX/XLS/CSV files locally in your browser, detects sheets and header rows, and prepares a mapping proposal. Nothing is generated until you approve the mapping.</p></div></div>
+    <div class="stepper" id="stepper1"></div>
+    <div class="grid2">
+      <div>
+        <div class="drop" id="drop"><div class="big">Drop supplier files here</div><div class="muted small sp">XLSX · XLS · CSV · multiple files · multi-sheet workbooks<br>PDF / images are accepted as reference only in Phase 1 (document AI not connected)</div><input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv,.pdf,.png,.jpg,.jpeg,.txt" style="display:none"></div>
+        <div class="card sp" id="textOfferCard"><h2>Or paste an offer (email body)</h2><textarea id="offerText" placeholder="We can offer 25 tons of DX51D+Z100, 0.5 × 1250 mm, first choice, available immediately."></textarea><div class="row sp"><button class="btn" id="btnParseText">Extract positions from text</button><span class="honest"><b>Local extraction</b> — pattern + catalog based, one row per line/sentence with a recognised grade</span></div></div>
+      </div>
+      <div class="card">
+        <h2>Listing details</h2>
+        <div class="field"><label class="lbl">Supplier</label><div class="row"><input type="text" id="supplierInput" list="supplierList" placeholder="Type or pick a supplier"><datalist id="supplierList"></datalist></div><div class="tiny muted sp" id="supplierHint">Auto-recognised from file name or previous listings when possible — you can always correct it.</div></div>
+        <div class="field sp"><label class="lbl">Listing name</label><input type="text" id="listingName" placeholder="e.g. NLMK stock list October"></div>
+        <div class="field sp"><label class="lbl">Processing mode</label><select id="jobMode"><option value="one">All files → one supplier listing</option><option value="separate">Each file → separate listing job (processed one after another)</option></select></div>
+        <div id="fileList" class="sp"></div>
+        <div id="sheetPanel" class="sp"></div>
+        <div class="row sp2"><button class="btn primary" id="btnToMapping" disabled>Continue to Mapping Studio →</button><button class="btn ghost" id="btnReset">Reset</button></div>
+      </div>
+    </div>
+    <div class="card sp" id="rawPreviewCard" style="display:none"><div class="row between"><h2 id="rawPreviewTitle">Source preview</h2><span class="tiny muted">Click a row to use it as the header row</span></div><div class="tscroll" id="rawPreview"></div></div>
+  </section>
+
+  <!-- MAPPING STUDIO -->
+  <section class="page" id="p-mapping">
+    <div class="page-head"><div><div class="eyebrow">Step 3–5 · Mandatory human checkpoint</div><h1>Mapping Studio</h1><p>Review how each source column maps to the Vanilla Steel template. Change targets, conversions and defaults; add custom rules; then approve to generate the listing.</p></div><div class="row"><button class="btn" id="btnSavePreset">Save as supplier preset</button><button class="btn primary" id="btnGenerate">Approve Mapping &amp; Generate Listing →</button></div></div>
+    <div class="stepper" id="stepper2"></div>
+    <div class="tabs" id="sheetTabs"></div>
+    <div class="row between" style="margin-bottom:10px"><div class="row"><span id="mapStats" class="small muted"></span></div><div class="row"><button class="btn sm" id="btnCopyMap">Apply this mapping to all sheets with matching headers</button><button class="btn sm" id="btnReproposeMap">Re-propose</button></div></div>
+    <div class="card flat" style="padding:0;overflow:hidden" id="mapTable"></div>
+    <div class="grid2 sp2">
+      <div class="card"><h2>Defaults &amp; required fields</h2><p class="small muted" style="margin-top:0">Values applied to every row where the field is not mapped or empty. Mandatory template fields that are neither mapped nor defaulted are listed.</p><div id="defaultsPanel"></div><div id="requiredPanel" class="sp"></div><label class="switch sp"><input type="checkbox" id="copyDescToggle" checked> Copy raw description text into "Description per Line Item"</label></div>
+      <div class="card"><h2>Preview · first rows after transformation</h2><div class="tscroll" id="mapPreview" style="max-height:340px"></div></div>
+    </div>
+    <div class="card sp2" id="instrCard"></div>
+  </section>
+
+  <!-- WORKSPACE -->
+  <section class="page" id="p-workspace">
+    <div class="page-head"><div><div class="eyebrow">Step 6–8</div><h1 id="wsTitle">Listing Workspace</h1><p id="wsSub">Review, edit and validate the standardized listing, then export the Vanilla Steel template.</p></div><div class="row"><button class="btn" id="btnSaveListing">Save to history</button><button class="btn" id="btnValReport">Validation report</button><button class="btn primary" id="btnExport">Download standardized Excel</button></div></div>
+    <div class="stepper" id="stepper3"></div>
+    <div class="kpis" id="wsKpis"></div>
+    <div class="row between" style="margin-bottom:10px">
+      <div class="row">
+        <input type="search" id="wsSearch" placeholder="Search rows…" style="width:200px">
+        <select id="wsFilter" style="width:auto"><option value="">All rows</option><option value="validated">Validated</option><option value="review">Needs review</option><option value="missing">Missing information</option><option value="invalid">Invalid</option><option value="corrected">Manually corrected</option><option value="excluded">Excluded</option><option value="dup">Duplicate candidates</option></select>
+        <select id="wsSheetFilter" style="width:auto"></select>
+        <button class="btn sm" id="btnCols">Columns</button>
+      </div>
+      <div class="row">
+        <span class="small muted sel-count" id="selCount"></span>
+        <button class="btn sm" id="btnBulk" disabled>Bulk edit</button>
+        <button class="btn sm" id="btnExclude" disabled>Exclude</button>
+        <button class="btn sm" id="btnRestore" disabled>Restore</button>
+        <button class="btn sm" id="btnAddRow">+ Add position</button>
+        <button class="btn sm" id="btnUndo" title="Ctrl+Z">Undo</button><button class="btn sm" id="btnRedo" title="Ctrl+Y">Redo</button>
+        <button class="btn sm" id="btnAI">Run AI extraction</button><button class="btn sm" id="btnResolve">Resolve unknowns</button><button class="btn sm" id="btnRules2">Rules</button>
+      </div>
+    </div>
+    <div class="gridwrap" id="gridwrap"></div>
+    <div class="pager" id="pager"></div>
+    <div class="card sp2" id="instrCard2"></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="page" id="p-history">
+    <div class="page-head"><div><div class="eyebrow">Module 7</div><h1>Listing History</h1><p>Previously processed listings, versions and updates. Open a listing to edit material positions; every change is logged with a reason.</p></div><div class="row"><input type="search" id="histSearch" placeholder="Search listings…" style="width:240px"></div></div>
+    <div id="histList" class="list"></div>
+  </section>
+
+  <!-- SUPPLIERS -->
+  <section class="page" id="p-suppliers">
+    <div class="page-head"><div><div class="eyebrow">Module 8</div><h1>Supplier Intelligence</h1><p>Supplier profiles, approved rules, learned header aliases and extraction quality. Supplier-specific interpretations never become global rules without explicit approval.</p></div><div class="row"><button class="btn" id="btnNewSupplier">+ New supplier</button></div></div>
+    <div class="grid2" id="supplierPage"></div>
+  </section>
+
+  <!-- CATALOG -->
+  <section class="page" id="p-catalog">
+    <div class="page-head"><div><div class="eyebrow">Knowledge base</div><h1>Material Catalog</h1><p>Accepted values from Listings_Catalog.xlsx (Validation sheet) and the approved aliases that map supplier terminology onto them. Built-in aliases are shown so they can be audited.</p></div><div class="row"><span id="catalogCounts" class="small muted"></span></div></div>
+    <div class="tabs" id="catTabs"></div>
+    <div class="row" style="margin-bottom:10px"><input type="search" id="catSearch" placeholder="Search values or aliases…" style="width:280px"><button class="btn sm" id="btnAddCatalog">+ Add value</button><button class="btn sm" id="btnAddAlias">+ Add alias</button></div>
+    <div class="grid2"><div class="card"><h2 id="catListTitle">Values</h2><div class="tscroll" id="catList" style="max-height:60vh"></div></div><div class="card"><h2>Aliases → catalog value</h2><div class="tscroll" id="catAliases" style="max-height:60vh"></div></div></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="page" id="p-settings">
+    <div class="page-head"><div><div class="eyebrow">Phase 2–3</div><h1>Settings &amp; Integrations</h1><p>What is live in this prototype, what is simulated, and what is planned.</p></div></div>
+    <div class="grid2">
+      <div class="card"><h2>Integrations</h2><div class="list" id="integrations"></div></div>
+      <div>
+        <div class="card"><h2>Validation policy</h2><div class="small" id="policyText"></div></div>
+        <div class="card sp"><h2>Data &amp; storage</h2><p class="small muted" style="margin-top:0">All data lives in this browser only (localStorage) — nothing is sent to a server. Clearing site data removes it.</p><div class="row"><button class="btn sm" id="btnBackup">Export backup (JSON)</button><button class="btn sm" id="btnRestoreBackup">Import backup</button><input type="file" id="backupInput" accept=".json" style="display:none"><button class="btn sm danger" id="btnWipe">Clear all data</button></div><div class="tiny muted sp" id="storageInfo"></div><label class="switch sp"><input type="checkbox" id="adminToggle"> Administrator mode (approve global rules, edit catalog)</label><label class="switch sp"><input type="checkbox" id="aiToggle" checked> Use Claude when available</label><label class="switch sp"><input type="checkbox" id="aiExtractToggle" checked> Run the AI extraction pass automatically after generation</label><div class="field sp" id="appTokenRow" style="display:none"><label class="lbl">App access token (set by your admin in Netlify)</label><input type="text" id="appTokenInput" placeholder="paste token"></div></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="drawer" id="drawer"><div class="dh"><div><div class="eyebrow" id="drTitleEyebrow">Row detail</div><h2 id="drTitle"></h2></div><button class="btn sm" id="drClose">Close</button></div><div class="db" id="drBody"></div></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="catalog.js"></script><script src="engine.js"></script><script src="ai.js"></script><script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+{ "name": "vs-listing-intelligence", "version": "0.2.0", "type": "module", "private": true,
+  "scripts": { "test": "node test/engine.test.cjs", "dev": "netlify dev", "deploy": "netlify deploy --prod" } }
