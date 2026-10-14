@@ -129,6 +129,8 @@ function detectLocale(values){
   for (const v of values){
     if (typeof v !== 'string') continue;
     const s=v.trim();
+    if (/^-?0,\d+$/.test(s)) { eu++; continue; }            // 0,400 can only be a decimal comma
+    if (/^-?0\.\d+$/.test(s)) { us++; continue; }           // 0.400 can only be a decimal point
     if (/^-?\d{1,3}\.\d{3}$/.test(s)) euW++; else if (/^-?\d{1,3},\d{3}$/.test(s)) usW++;
     if (/^-?\d{1,3}(\.\d{3})+,\d+$/.test(s)) eu++;
     else if (/^-?\d{1,3}(,\d{3})+\.\d+$/.test(s)) us++;
@@ -217,8 +219,8 @@ const VALUE_ALIASES = {
   surfaceProtections: {
     'PO':'Pickled and Oiled','P&O':'Pickled and Oiled','P+O':'Pickled and Oiled','P/O':'Pickled and Oiled','HRPO':'Pickled and Oiled','PICKLED AND OILED':'Pickled and Oiled','PICKLED & OILED':'Pickled and Oiled','PICKLED OILED':'Pickled and Oiled','GEBEIZT UND GEOELT':'Pickled and Oiled','GEBEIZT GEOELT':'Pickled and Oiled','GEBEIZT':'Pickled and Oiled','GEB GEOELT':'Pickled and Oiled','DECAPE HUILE':'Pickled and Oiled','DECAPE ET HUILE':'Pickled and Oiled','DECAPATO E OLIATO':'Pickled and Oiled','DECAPATO OLIATO':'Pickled and Oiled','GEBEITST EN GEOLIED':'Pickled and Oiled','GEBEITST':'Pickled and Oiled','TRAWIONE OLEJOWANE':'Pickled and Oiled',
     'PICKLED':'Pickled','DECAPE':'Pickled','DECAPATO':'Pickled','PICKLED DRY':'Pickled','GEBEIZT TROCKEN':'Pickled',
-    'OILED':'Oiled (O)','GEOELT':'Oiled (O)','HUILE':'Oiled (O)','OLIATO':'Oiled (O)','GEOLIED':'Oiled (O)','OIL':'Oiled (O)','O':'Oiled (O)','LIGHTLY OILED':'Lightly Oiled (L)','LEICHT GEOELT':'Lightly Oiled (L)','L':'Lightly Oiled (L)',
-    'DRY':'Dry','TROCKEN':'Dry','SEC':'Dry','SECCO':'Dry','UNGEOELT':'Dry','UNOILED':'Dry','NOT OILED':'Dry','DROOG':'Dry',
+    'OILED':'Oiled (O)','GEOELT':'Oiled (O)','GEF':'Oiled (O)','GEFETTET':'Oiled (O)','EINGEFETTET':'Oiled (O)','GEFETTET.':'Oiled (O)','GEOELT.':'Oiled (O)','GEÖLT':'Oiled (O)','FETT':'Oiled (O)','HUILE':'Oiled (O)','OLIATO':'Oiled (O)','GEOLIED':'Oiled (O)','OIL':'Oiled (O)','O':'Oiled (O)','LIGHTLY OILED':'Lightly Oiled (L)','LEICHT GEOELT':'Lightly Oiled (L)','L':'Lightly Oiled (L)',
+    'DRY':'Dry','TROCKEN':'Dry','TR':'Dry','TROCK':'Dry','UNGEFETTET':'Dry','NICHT GEFETTET':'Dry','UNGEOELT.':'Dry','SEC':'Dry','SECCO':'Dry','UNGEOELT':'Dry','UNOILED':'Dry','NOT OILED':'Dry','DROOG':'Dry',
     'BLACK':'Black','SCHWARZ':'Black','NOIR':'Black','NERO':'Black','HR BLACK':'Black','UNPICKLED':'Black','UNGEBEIZT':'Black',
     'PASSIVATED':'Chemically passivated (C)','PASSIVIERT':'Chemically passivated (C)','CHROMATED':'Chemically passivated (C)','CHROMATIERT':'Chemically passivated (C)','C':'Chemically passivated (C)','CO':'Chemically passivated and oiled (CO)','PASSIVATED AND OILED':'Chemically passivated and oiled (CO)','PASSIVIERT UND GEOELT':'Chemically passivated and oiled (CO)',
     'PHOSPHATED':'Phosphated (P)','PHOSPHATIERT':'Phosphated (P)','P':'Phosphated (P)','PHOSPHATED AND OILED':'Phosphated and oiled (PO)',
@@ -249,7 +251,7 @@ const COATING_RE = /^(AZM|ZM|ZA|ZE|ZF|ZV|EG|GI|GA|AS|AZ|Z)\s?(\d{1,4}(?:[.,]\d)?
 /* matchCatalog(list, value, ctx) → {value, status:'exact'|'alias'|'inferred'|'unresolved', note, suggestion?} */
 function matchCatalog(list, raw, ctx){
   if (isBlank(raw)) return { value:'', status:'empty' };
-  const idx = ctx.catalogIndex[list]; const s = String(raw).trim(); const k = normKey(s);
+  const idx = ctx.catalogIndex[list]; const s = String(raw).trim().replace(/[.:;,]+$/,''); const k = normKey(s);
   const nk = normKey(norm(s));
   if (idx.map.has(k)) return { value: idx.map.get(k), status:'exact', note:'Exact catalog match' };
   if (idx.map.has(nk)) return { value: idx.map.get(nk), status:'exact', note:'Exact catalog match (normalized)' };
@@ -482,6 +484,7 @@ function analyzeSheet(aoa, opts={}){
   // sheet-level locale: strong column evidence, else European header language, else supplier locale
   const strong = columns.map(c=>c.locale).filter(x=>x && !x.endsWith('?')); let sheetLocale = strong.filter(x=>x==='eu').length>strong.filter(x=>x==='us').length ? 'eu' : strong.length ? 'us' : null;
   if (!sheetLocale){ const euHdr = headers.some(h=>/breite|dicke|staerke|laenge|gewicht|guete|stueck|wahl|largeur|epaisseur|longueur|poids|larghezza|spessore|lunghezza|dikte|breedte|lengte|espesor|grubosc|szerokosc/.test(norm(h))); if (euHdr) sheetLocale='eu'; }
+  if (opts.ctx && opts.ctx.forceLocale) { sheetLocale = opts.ctx.forceLocale; for (const c of columns) c.locale = sheetLocale; notes.push('Number format set manually'); }
   if (!sheetLocale && opts.ctx && opts.ctx.supplierLocale) sheetLocale = opts.ctx.supplierLocale;
   if (sheetLocale) { notes.push(`Number locale: ${sheetLocale==='eu'?'European (decimal comma)':'decimal point'}`); for (const c of columns) if (!c.locale || c.locale.endsWith('?')) c.locale = sheetLocale; }
   else for (const c of columns) if (c.locale && c.locale.endsWith('?')) c.locale = c.locale.slice(0,-1);
@@ -581,7 +584,11 @@ function transformSheet(analysis, mapping, ctx, sheetName, startId){
           for (const f of [F.coating, F.finish, F.sprot, F.stype, F.choice]) if (p.fields[f] && isBlank(row.fields[f]) && !mapping.some(x=>x.target===f && !isBlank(d.cells[x.colIdx]))) setField(row, f, p.fields[f], { status:p.prov[f].status, src:m.header, raw:v, note:p.prov[f].note+' (split from grade column)' });
           for (const u of p.unresolved) row.unresolved.push({ ...u, src:m.header });
         } else {
-          const mm = matchCatalog(tdef.list, v, ctx);
+          let mm = matchCatalog(tdef.list, v, ctx); let target = m.target;
+          if (mm.status==='unresolved' && [F.stype, F.sprot, F.finish].includes(m.target)){
+            for (const [alt, altList] of [[F.sprot,'surfaceProtections'],[F.finish,'finishes'],[F.stype,'surfaceTypes']]){ if (alt===m.target || !isBlank(row.fields[alt])) continue; const m2 = matchCatalog(altList, v, ctx); if (m2.status==='exact'||m2.status==='alias'){ mm = { ...m2, note:`${m2.note} — value belongs to ${alt}, placed there from column "${m.header}"` }; target = alt; break; } }
+          }
+          if (target!==m.target) { setField(row, target, mm.value, { status:'alias', src:m.header, raw:v, note:mm.note }); continue; }
           setField(row, m.target, mm.value, { status:mm.status, src:m.header, raw:v, note:mm.note, suggestion:mm.suggestion });
           if (m.target===F.coating && mm.rest){ const sug = decomposeSurfaceCode(mm.rest, ctx); row.unresolved.push({ token:mm.rest, src:m.header, hint: sug?`Possible: Surface Type "${sug.stype}"${sug.sprot?` + Surface Protection "${sug.sprot}"`:''} (catalog codes) — confirm or add a supplier rule`:'Unknown code after coating — add a supplier rule', suggestion:sug }); }
           if (m.target===F.coating && mm.value && isBlank(row.fields[F.finish]) && !mapping.some(x=>x.target===F.finish)){ const pre = normKey(mm.value).match(/^(AZM|ZM|ZA|ZE|ZF|EG|GI|GA|AS|AZ|Z)/); const fin = pre && COATING_PREFIX_FINISH[pre[1]]; if (fin) setField(row, F.finish, fin, { status:'inferred', src:m.header, raw:v, note:`Inferred from coating prefix "${pre[1]}" (catalog finish code)` }); }
@@ -628,7 +635,7 @@ function ruleMatches(rule, row){
   switch (w.op){
     case 'equals': return normKey(sv)===normKey(val);
     case 'contains': return normKey(sv).includes(normKey(val)) || new RegExp('(^|[^A-Z0-9])'+escRe(normKey(val))+'([^A-Z0-9]|$)').test(normKey(sv.replace(/\s+/g,' ')));
-    case 'token': return normKey(sv.replace(/[+/,;x×*]/g,' ')).split(/\s+/).includes(normKey(val)) || sv.toUpperCase().split(/[\s+,;/|]+/).includes(val.toUpperCase());
+    case 'token': { const nv = normKey(val).replace(/[.:]+$/,''); const toks = sv.toUpperCase().replace(/[+/,;|x×*]/g,' ').split(/\s+/).map(x=>x.replace(/[.:]+$/,'').replace(/\s/g,'')); return toks.includes(nv) || toks.includes(normKey(val)); }
     case 'empty': return sv==='';
     case 'zero': { const n=parseNum(sv).value; return sv==='' || n===0; }
     case 'gt': return (parseNum(sv).value??-Infinity) > parseNum(val).value;
@@ -685,6 +692,12 @@ function parseInstruction(text, ctx){
   // A2) "map X as Y where/when Z is W"
   m = t2.match(/(?:map|set|mark|assign)\s+(.+?)\s+(?:where|wherever|when|if|whenever)\s+(?:the\s+)?(.+?)\s+(?:is|=|equals|contains|mentions|says|includes|has)\s+["']?([^"',.]+?)["']?\.?$/i);
   if (m){ const then=thenPairs(m[1]); const field=srcCol(m[2]); const op=/contains|mentions|says|includes|has/i.test(t)?'token':'equals'; if (field&&then.length) return { rule:{ when:{ field, op, value:m[3].trim() }, then, sheet } }; }
+  // A3) "positions with X are all Y, map <field> as <value>" / "rows with X → map ..."
+  m = t2.match(/(?:positions?|rows?|materials?|items?|lines?)\s+(?:with|containing|marked|that say|that contain)\s+["']?(.+?)["']?\s+(?:are|is|=|mean|means)\s+(?:all\s+)?(.+?)[,;.]?\s+(?:map|set|put)\s+(?:the\s+)?(.+?)\s+(?:as|to|=)\s+["']?(.+?)["']?\.?$/i);
+  if (m){ const f=targetField(m[3]); if (f) return { rule:{ when:{ field:'src:*', op:'token', value:m[1].trim() }, then:[{ field:f, value:m[4].trim() }], sheet } }; }
+  // A4) "X means Y" / "X = Y" / "X stands for Y" — field inferred from which catalog contains Y
+  m = t2.match(/^["']?([^"'=]+?)["']?\s+(?:means|stands for|is|=|->|→|equals)\s+["']?([^"']+?)["']?\.?$/i);
+  if (m){ for (const [list, field] of [['surfaceProtections',F.sprot],['finishes',F.finish],['forms',F.form],['choices',F.choice],['surfaceTypes',F.stype],['coatings',F.coating],['certs',F.certs]]){ const mm = matchCatalog(list, m[2].trim(), ctx); if (mm.status==='exact'||mm.status==='alias') return { rule:{ when:{ field:'src:*', op:'token', value:m[1].trim() }, then:[{ field, value:mm.value }], sheet } }; } }
   // B) default choice / default values for all rows
   m = t2.match(/(?:all|every|each)\s+(?:materials?|rows?|positions?|items?|lines?)\s+(?:in this (?:file|list|listing|sheet)\s+)?(?:are|is|should be|=)\s+(.+?)(?:\s+unless\s+(?:otherwise|stated|mentioned|specified).*)?\.?$/i);
   if (m){ const pairs = thenPairs('choice as '+m[1]); const ch = matchCatalog('choices', m[1].replace(/choice/i,'').trim(), ctx);

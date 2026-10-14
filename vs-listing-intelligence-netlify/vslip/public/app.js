@@ -54,7 +54,7 @@ let sampleFn=null, downloadsNs=null, aiChecked=false;
 
 /* ---------- JOB ---------- */
 let J = null;
-function newJob(){ J = { id:uid(), name:'', supplier:'', startedAt:nowISO(), files:[], sheets:[], defaults:{ [F.certs]:'' }, uploadRules:[], rows:[], undo:[], redo:[], listingId:null, pageNo:0, selected:new Set(), hidden:new Set(), filter:'', search:'', sheetFilter:'', generatedAt:null, exportedAt:null, overrides:[], copyDesc:true }; }
+function newJob(){ J = { id:uid(), name:'', supplier:'', locale:null, startedAt:nowISO(), files:[], sheets:[], defaults:{ [F.certs]:'' }, uploadRules:[], rows:[], undo:[], redo:[], listingId:null, pageNo:0, selected:new Set(), hidden:new Set(), filter:'', search:'', sheetFilter:'', generatedAt:null, exportedAt:null, overrides:[], copyDesc:true }; }
 newJob();
 
 /* ---------- file reading ---------- */
@@ -86,7 +86,7 @@ async function handleFiles(files){
   if (!J.name && J.files.length) J.name = J.files[0].name.replace(/\.[^.]+$/,'');
   renderNew();
 }
-function analyze(sheet){ sheet.analysis = E.analyzeSheet(sheet.aoa, { headerRow: sheet.headerRow, ctx: ctxFor(J.supplier) }); sheet.mapping=null; }
+function analyze(sheet){ sheet.analysis = E.analyzeSheet(sheet.aoa, { headerRow: sheet.headerRow, ctx: ctxFor(J.supplier, { forceLocale: J.locale||null }) }); sheet.mapping=null; }
 function recogniseSupplier(){
   const text = J.files.map(f=>f.name).join(' ') + ' ' + J.sheets.slice(0,3).map(s=>s.aoa.slice(0,5).flat().filter(Boolean).join(' ')).join(' ');
   const n = E.norm(text);
@@ -152,6 +152,8 @@ function renderMapping(){
   // defaults
   const defFields=[F.loc,F.article,F.form,F.choice,F.finish,F.certs,F.price,F.sprot,F.stype,F.comments];
   $('#defaultsPanel').innerHTML = `<div class="grid2" style="gap:8px">${defFields.map(f=>{ const t=T[f]; const opts = t.type==='catalog' ? `<select data-def="${esc(f)}"><option value="">— none —</option>${CAT()[t.list].map(v=>`<option ${J.defaults[f]===v?'selected':''}>${esc(v)}</option>`).join('')}</select>` : `<input type="text" data-def="${esc(f)}" value="${esc(J.defaults[f]||'')}" placeholder="${f===F.article?'leave blank — never generated':'default value'}">`; return `<div class="field"><label class="lbl">${esc(f)}${t.req==='critical'?' *':''}</label>${opts}</div>`; }).join('')}</div>`;
+  $('#defaultsPanel').insertAdjacentHTML('afterbegin', `<div class="field" style="margin-bottom:10px"><label class="lbl">Number format of this file</label><select id="localeSel"><option value="" ${!J.locale?'selected':''}>Auto-detect (${curSheet.analysis.sheetLocale==='eu'?'detected European — 1.250,50':curSheet.analysis.sheetLocale==='us'?'detected decimal point — 1,250.50':'undetermined'})</option><option value="eu" ${J.locale==='eu'?'selected':''}>European — comma is the decimal (167,00 → 167 · 1,250 → 1.25)</option><option value="us" ${J.locale==='us'?'selected':''}>Decimal point — comma is thousands (1,250 → 1250)</option></select></div>`);
+  $('#localeSel').onchange=e=>{ J.locale=e.target.value||null; for(const s of J.sheets){ if(s.isText) continue; const keep=s.mapping; analyze(s); s.mapping=keep; for(const m of (s.mapping||[])){ const col=s.analysis.columns[m.colIdx]; if(col) m.locale=col.locale; } } renderMapping(); toast('Number format '+(J.locale?'set to '+(J.locale==='eu'?'European':'decimal point'):'back to auto-detect')); };
   $('#defaultsPanel').onchange=e=>{ const f=e.target.dataset.def; if(f!=null){ J.defaults[f]=e.target.value; renderRequired(); renderMapPreview(); } };
   $('#copyDescToggle').checked=J.copyDesc; $('#copyDescToggle').onchange=e=>{ J.copyDesc=e.target.checked; renderMapPreview(); };
   renderRequired(); renderMapPreview(); renderInstrPanel($('#instrCard'), 'mapping');
@@ -544,7 +546,7 @@ function renderSettings(){
 $('#adminToggle').onchange=e=>{ S.settings.admin=e.target.checked; save(); };
 $('#aiToggle').onchange=e=>{ S.settings.ai=e.target.checked; save(); renderAiStatus(); };
 $('#aiExtractToggle').onchange=e=>{ S.settings.aiExtract=e.target.checked; save(); };
-$('#appTokenInput').onchange=e=>{ try{ sessionStorage.setItem('vs-app-token', e.target.value.trim()); AI.token=e.target.value.trim(); }catch(err){} toast('Access token stored for this session'); };
+$('#appTokenInput').onchange=e=>{ const v=e.target.value.trim(); try{ sessionStorage.setItem('vs-app-token', v); AI.token=v; }catch(err){} toast(/[^\x20-\x7E]/.test(v)?'Token stored (contains special characters — it will be encoded automatically)':'Access token stored for this session'); };
 $('#btnBackup').onclick=()=>saveFile('vs-listing-intelligence-backup.json', new Blob([JSON.stringify(S)],{type:'application/json'}));
 $('#btnRestoreBackup').onclick=()=>$('#backupInput').click(); $('#backupInput').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const o=JSON.parse(r.result); if(!o.listings||!o.rules) throw new Error('not a backup'); S={...S,...o}; save(); reindex(); toast('Backup imported'); go('dashboard'); }catch(err){ toast('Invalid backup file', true); } }; r.readAsText(f); e.target.value=''; };
 $('#btnWipe').onclick=()=>{ if(confirm('Clear all listings, rules, suppliers and aliases stored in this browser?')){ localStorage.removeItem(KEY); location.reload(); } };

@@ -8,7 +8,7 @@ async function initAI(){
 }
 const remoteSample = {
   async json(prompt, opts={}){
-    const res = await fetch('/api/claude', { method:'POST', headers:{ 'content-type':'application/json', ...(AI.token?{'x-app-token':AI.token}:{}) }, body: JSON.stringify({ prompt, tier: opts.modelTier==='quick'?'quick':'default', maxTokens: opts.maxTokens||4000 }) });
+    const res = await fetch('/api/claude', { method:'POST', headers:{ 'content-type':'application/json', ...(AI.token?{'x-app-token':encodeURIComponent(AI.token)}:{}) }, body: JSON.stringify({ prompt, tier: opts.modelTier==='quick'?'quick':'default', maxTokens: opts.maxTokens||4000 }) });
     const data = await res.json().catch(()=>({ error:'bad response' }));
     if (!res.ok || data.error){ const e = new Error(data.error||('HTTP '+res.status)); e.code = res.status===401?'unauthorised':res.status===429?'rate_limited':'upstream'; throw e; }
     return data.result;
