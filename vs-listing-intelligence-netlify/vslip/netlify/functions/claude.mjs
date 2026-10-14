@@ -12,6 +12,7 @@ const LIMIT = Number(process.env.RATE_LIMIT_PER_MIN || 60);
 const bucket = new Map(); // best-effort per-IP limiter (per warm instance)
 const usage = { requests: 0, inputTokens: 0, outputTokens: 0, errors: 0, since: new Date().toISOString() };
 
+const safeDecode = (s) => { try { return decodeURIComponent(s || "").trim(); } catch { return (s || "").trim(); } };
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
 export default async (request) => {
@@ -19,7 +20,7 @@ export default async (request) => {
   if (url.pathname.endsWith("/health")) return json({ ok: !!process.env.ANTHROPIC_API_KEY, models: MODELS, usage, authRequired: !!process.env.APP_ACCESS_TOKEN });
   if (request.method !== "POST") return json({ error: "POST only" }, 405);
   if (!process.env.ANTHROPIC_API_KEY) return json({ error: "ANTHROPIC_API_KEY is not configured on the server" }, 503);
-  if (process.env.APP_ACCESS_TOKEN && request.headers.get("x-app-token") !== process.env.APP_ACCESS_TOKEN) return json({ error: "unauthorised" }, 401);
+  if (process.env.APP_ACCESS_TOKEN && safeDecode(request.headers.get("x-app-token")) !== process.env.APP_ACCESS_TOKEN.trim()) return json({ error: "unauthorised" }, 401);
 
   const ip = request.headers.get("x-nf-client-connection-ip") || request.headers.get("x-forwarded-for") || "anon";
   const now = Date.now(); const b = bucket.get(ip) || { t: now, n: 0 }; if (now - b.t > 60_000) { b.t = now; b.n = 0; } b.n++; bucket.set(ip, b);
