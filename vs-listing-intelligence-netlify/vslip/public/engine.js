@@ -263,7 +263,7 @@ function matchCatalog(list, raw, ctx){
   if (ua[k]) return { value: ua[k].value||ua[k], status:'alias', note:`Approved alias "${s}" → "${ua[k].value||ua[k]}"${ua[k].supplier?' ('+ua[k].supplier+')':''}` };
   if (ua[nk]) return { value: ua[nk].value||ua[nk], status:'alias', note:`Approved alias "${s}"` };
   // catalog code in parentheses e.g. "(PO)" "+N"
-  if (idx.codes.has(k.replace(/^\+/,''))) return { value: idx.codes.get(k.replace(/^\+/,'')), status:'alias', note:`Catalog code "${s}"` };
+  if (list!=='grades' && idx.codes.has(k.replace(/^\+/,''))) return { value: idx.codes.get(k.replace(/^\+/,'')), status:'alias', note:`Catalog code "${s}"` };
   // built-in aliases
   const ba = VALUE_ALIASES[list]||{};
   if (ba[k]) return { value: ba[k], status:'alias', note:`Built-in alias "${s}" → "${ba[k]}" — verify` };
@@ -811,18 +811,48 @@ function buildExportAOA(rows){
   for (const r of rows){ if (r.excluded) continue; out.push(FIELDS.map(f=>{ const v=r.fields[f]; if (isBlank(v)) return null; if (T[f].type==='num'){ const n = typeof v==='number'?v:parseNum(v).value; return n; } return typeof v==='string'? v.replace(/^'(?=[=+\-@])/,'') : v; })); }
   return out;
 }
-/* Plain-text / email offer extraction: one row per line or sentence that contains a grade */
+/* Plain-text / email offer extraction. Blocks separated by blank lines form one position; a block without its own grade
+   continues the previous one. Header lines (choice, supplier) and price lines apply to all positions. */
 function extractFromText(text, ctx){
-  const chunks = String(text).split(/\r?\n|(?<=[.;])\s+(?=[A-Z0-9])/).map(s=>s.trim()).filter(s=>s.length>3);
+  const lines = String(text).replace(/\r/g,'').split('\n').map(s=>s.trim());
+  const blocks=[]; let cur=[];
+  for (const l of lines){ if (!l){ if (cur.length) blocks.push(cur); cur=[]; } else cur.push(l); } if (cur.length) blocks.push(cur);
+  const isPrice = s => /(?:preis|price|prix|prezzo|€|eur\b)/i.test(s) && /\d/.test(s);
+  const hasGrade = s => { const p = parseDescription(s, { ...ctx, noFamily:true }); return p.fields[F.grade] && (p.prov[F.grade].status==='exact' || p.prov[F.grade].status==='alias'); };
+  const header = { choice:null, price:null, priceNote:null, supplier:null, notes:[] };
+  const positions=[];
+  for (const b of blocks){
+    const joined = b.join(' ');
+    if (isPrice(joined) && !b.some(hasGrade)){ const m = joined.match(/(\d{2,6}(?:[.,]\d{1,2})?)\s*(?:,-|-)?\s*(?:€|eur)?\s*(?:\/|per|pro)\s*(t|to|ton|tonne|mt)\b/i) || joined.match(/(?:€|eur)\s*(\d{2,6}(?:[.,]\d{1,2})?)/i); if (m){ header.price = parseNum(m[1]).value; header.priceNote = joined; } else header.notes.push(joined); continue; }
+    const gradeLines = b.filter(hasGrade);
+    if (!gradeLines.length){
+      // continuation of the previous position (dimensions / weight on their own line) or a header line
+      if (positions.length && /\d/.test(joined) && !positions[positions.length-1].closed) { positions[positions.length-1].lines.push(...b); continue; }
+      const ch = parseDescription(joined, ctx); if (ch.fields[F.choice] && !positions.length) header.choice = ch.fields[F.choice];
+      header.notes.push(joined); continue;
+    }
+    // split a block that contains several grade lines into several positions
+    let p=null; for (const l of b){ if (hasGrade(l)){ if (p) positions.push(p); p={ lines:[l] }; } else if (p) p.lines.push(l); else header.notes.push(l); } if (p) positions.push(p);
+  }
   const rows=[]; let id=1;
-  for (const c of chunks){ const p = parseDescription(c, ctx); if (!p.fields[F.grade] && !p.fields[F.coating]) continue; const r = newRow(id++, 'Email/text', rows.length+1, { 'Text': c });
-    for (const [f,v] of Object.entries(p.fields)) setField(r, f, v, { status:p.prov[f].status, src:'Text', raw:c, note:p.prov[f].note });
+  for (const pos of positions){
+    const c = pos.lines.join(' '); const p = parseDescription(c, ctx);
+    const r = newRow(id++, 'Email/text', rows.length+1, { 'Text': pos.lines.join(' | ') });
+    for (const [f,v] of Object.entries(p.fields)) setField(r, f, v, { ...p.prov[f], src:'Text', raw:c });
+    for (const f of [F.grade, F.coating]) if (p.prov[f] && p.prov[f].status==='unresolved') r.prov[f] = { ...p.prov[f], src:'Text' };
+    // weight / quantity patterns common in offers: "15035 kg / 1 Coil", "25 to", "3 Bunde"
+    const kg = c.match(/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)\s*kg\b/i); if (kg && isBlank(r.fields[F.weight])) setField(r, F.weight, parseNum(kg[1], detectLocale([kg[1]])||undefined).value, { status:'source', src:'Text', raw:kg[0], note:'Weight in kg from text' });
+    const to = c.match(/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)\s*(?:t|to|tons?|tonnen|mt)\b/i); if (to && isBlank(r.fields[F.weight])) setField(r, F.weight, round(parseNum(to[1]).value*1000), { status:'inferred', src:'Text', raw:to[0], note:'Tonnes × 1000' });
+    const q = c.match(/(\d+)\s*(?:x\s*)?(coils?|bunde?|rollen|sheets?|tafeln|pcs|pieces|stk|stueck|stück|bund)\b/i); if (q && isBlank(r.fields[F.qty])) setField(r, F.qty, parseInt(q[1],10), { status:'source', src:'Text', raw:q[0], note:'Quantity from text' });
+    if (isBlank(r.fields[F.choice]) && header.choice) setField(r, F.choice, header.choice, { status:'inferred', src:'Text', note:'Choice stated in the offer header' });
+    if (isBlank(r.fields[F.price]) && header.price!=null) setField(r, F.price, header.price, { status:'inferred', src:'Text', raw:header.priceNote, note:'Price per tonne stated in the offer' });
     setField(r, F.desc, sanitizeText(c), { status:'source', src:'Text', raw:c, note:'Raw text preserved' });
-    const av = c.match(/(?:available|verfuegbar|verfügbar|disponible|disponibile)[^,.]*/i); if (av && isBlank(r.fields[F.comments])) setField(r, F.comments, av[0], { status:'source', src:'Text', note:'Availability note from text' });
-    r.unresolved = p.unresolved.map(u=>({ ...u, src:'Text' })); rows.push(r); }
+    const av = c.match(/(?:available|verfuegbar|verfügbar|disponible|disponibile|prompt|sofort)[^,.]*/i); if (av && isBlank(r.fields[F.comments])) setField(r, F.comments, av[0], { status:'source', src:'Text', note:'Availability note from text' });
+    r.unresolved = p.unresolved.map(u=>({ ...u, src:'Text' })); rows.push(r);
+  }
+  if (header.notes.length && rows.length) for (const r of rows) if (isBlank(r.fields[F.comments])) setField(r, F.comments, header.notes.join(' · ').slice(0,200), { status:'source', src:'Text', note:'Offer header/footer text' });
   return rows;
 }
-
 return { classifyForm, articleCandidates, matchGradeTiered, coatingCandidates, gradeSuggestions, TEMPLATE, T, FIELDS, F, SPECIAL_TARGETS, FORM_DIMS, HEADER_ALIASES, VALUE_ALIASES, COATING_PREFIX_FINISH, norm, normKey, isBlank, parseNum, detectLocale, detectUnitInHeader, buildCatalogIndex, matchCatalog, parseDescription, decomposeSurfaceCode, analyzeSheet, proposeMapping, transformSheet, applyRule, ruleMatches, ruleToText, parseInstruction, targetField, validateRows, summary, buildExportAOA, extractFromText, headerCandidates, describeTransform, UNIT_FACTORS, colLetter, gradeFamilyFinish };
 })();
 
