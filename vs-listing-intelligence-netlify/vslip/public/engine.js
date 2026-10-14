@@ -168,11 +168,14 @@ function parseNum(v, locale){
   }
   const n = parseFloat(s); return { value: isFinite(n)?n:null, ok:isFinite(n), note };
 }
-const UNIT_FACTORS = { m_to_mm:1000, cm_to_mm:10, inch_to_mm:25.4, t_to_kg:1000, g_to_kg:0.001, none:1 };
+const UNIT_FACTORS = { m_to_mm:1000, cm_to_mm:10, inch_to_mm:25.4, t_to_kg:1000, g_to_kg:0.001, div_1000:0.001, none:1 };
 function suggestUnitTransform(target, headerUnit, samples, locale){
   const nums = samples.map(s=>parseNum(s, locale).value).filter(n=>n!=null);
   const med = nums.length ? nums.sort((a,b)=>a-b)[Math.floor(nums.length/2)] : null;
   const isDim = [F.width,F.length,F.height,F.dia,F.thk,F.wall,F.web,F.flange].includes(target);
+  const numericSamples = samples.filter(s=>typeof s==='number').length;
+  if (isDim && med!=null && numericSamples>0 && ((target===F.thk||target===F.wall) ? med>500 : med>5000)) return { t:'div_1000', conf:'Medium', reason:`Values are stored as plain numbers around ${med} — far too large for mm; the supplier's Excel most likely read a decimal comma as a thousands separator (167,000 → 167000). ÷1000 proposed — verify` };
+  if (target===F.weight && med!=null && numericSamples>0 && med>500000) return { t:'div_1000', conf:'Medium', reason:`Values around ${med} kg per position are implausible — decimal comma likely read as thousands separator. ÷1000 proposed — verify` };
   if (isDim){
     if (headerUnit==='m') return { t:'m_to_mm', conf:'High', reason:'Header unit is metres → ×1000' };
     if (headerUnit==='cm') return { t:'cm_to_mm', conf:'High', reason:'Header unit is centimetres → ×10' };
@@ -618,7 +621,7 @@ function transformSheet(analysis, mapping, ctx, sheetName, startId){
   return rows;
 }
 function round(n){ return Math.round(n*10000)/10000; }
-function describeTransform(t){ return { m_to_mm:'m × 1000', cm_to_mm:'cm × 10', inch_to_mm:'inch × 25.4', t_to_kg:'t × 1000', g_to_kg:'g ÷ 1000', none:'none' }[t]||t; }
+function describeTransform(t){ return { div_1000:'÷ 1000 (value stored 1000× too large — decimal comma read as thousands separator)', m_to_mm:'m × 1000', cm_to_mm:'cm × 10', inch_to_mm:'inch × 25.4', t_to_kg:'t × 1000', g_to_kg:'g ÷ 1000', none:'none' }[t]||t; }
 function sanitizeText(v){ let s=String(v).trim(); if (/^[=+\-@\t\r]/.test(s)) s = "'"+s; return s; }
 
 /* ---------- Rules ---------- */
@@ -772,8 +775,8 @@ function validateRows(rows, ctx){
     if (!coatedFinish && !isBlank(f[F.coating]) && /Hot Rolled|Cold Rolled|As Rolled|Normalized|Quenched|Thermomechanically/.test(f[F.finish]||'')) add(F.finish,'warning',`Coating "${f[F.coating]}" present but finish "${f[F.finish]}" is uncoated — conflicting attributes`);
     const need = FORM_DIMS[form]; if (need) for (const d of need) if (isBlank(f[d])) add(d,'warning',`Required for form "${form}"`);
     const thk=f[F.thk], w=f[F.width], l=f[F.length], kg=f[F.weight], q=f[F.qty];
-    if (thk!=='' && (thk<0.1 || thk>400)) add(F.thk,'warning',`Suspicious thickness ${thk} mm — check units`);
-    if (w!=='' && (w<5 || w>4000)) add(F.width,'warning',`Suspicious width ${w} mm — check units (metres?)`);
+    if (thk!=='' && (thk<0.1 || thk>400)) add(F.thk,'warning', thk>2000 ? `Thickness ${thk} mm is impossible — value is probably 1000× too large; set the column transform to ÷1000 in Mapping Studio` : `Suspicious thickness ${thk} mm — check units`);
+    if (w!=='' && (w<5 || w>4000)) add(F.width,'warning', w>20000 ? `Width ${w} mm is impossible — value is probably 1000× too large (decimal comma read as thousands); set the column transform to ÷1000 in Mapping Studio` : `Suspicious width ${w} mm — check units (metres?)`);
     if (l!=='' && (l<5 || l>30000)) add(F.length,'warning',`Suspicious length ${l} mm — check units`);
     if (thk!=='' && w!=='' && thk>w) add(F.thk,'warning','Thickness greater than width — dimensions may be swapped');
     if (kg!=='' && kg<=0) add(F.weight,'critical','Weight must be greater than zero');
